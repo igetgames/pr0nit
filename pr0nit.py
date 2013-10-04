@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Sets the wallpaper on Linux via reddit. Requires 'feh' or you to edit the
+Sets the wallpaper via reddit. Requires 'feh' on Linux, or you to edit the
 WALLPAPER_CMD variable to suit your configuration.
 
 Suggested subreddits: /r/earthporn, /r/usaporn, /r/cityporn. Works on any
@@ -13,7 +13,12 @@ import uuid
 import os
 import json
 import urllib2
-import time 
+import time
+import sys
+
+if sys.platform == 'darwin':
+    from Foundation import NSAppleScript
+    from Cocoa import NSApplication
 
 WALLPAPER_CACHE_DIR = "%s/.wallpaper" % os.getenv("HOME")
 DEFAULT_SUBREDDIT = "r/earthporn" # try also, r/usaporn
@@ -23,14 +28,13 @@ FRAME_SPEED = 60
 
 class RedditWallpaperSetter(object):
 
-    def __init__(self, subreddit, cache_dir, wallpaper_cmd, frame_speed):
+    def __init__(self, subreddit, cache_dir, frame_speed):
         """ 
         Called every time the program is started. Ensures that the directory
         structure is intact. 
         """
         self.subreddit = subreddit
         self.cache_dir = cache_dir
-        self.wallpaper_cmd = wallpaper_cmd
         self.frame_speed = frame_speed
 
         if not os.path.isdir(cache_dir):
@@ -51,7 +55,7 @@ class RedditWallpaperSetter(object):
 
         for url in wallpaper_urls:
             path = self._download_wallpaper(url)            
-            os.system("%s %s" % (self.wallpaper_cmd, path))
+            self._set_wallpaper(path)
             time.sleep(self.frame_speed)
 
 
@@ -90,7 +94,40 @@ class RedditWallpaperSetter(object):
         return path
 
 
+    def _set_wallpaper(self, path):
+        raise Exception("Not implemented")
+
+
+class RedditWallpaperSetterLinux(RedditWallpaperSetter):
+    def __init__(self, subreddit, cache_dir, wallpaper_cmd, frame_speed):
+        super(RedditWallpaperSetterLinux, self).__init__(subreddit,
+                                                         cache_dir,
+                                                         frame_speed)
+        self.wallpaper_cmd = wallpaper_cmd
+
+    def _set_wallpaper(self, path):
+        os.system("%s %s" % (self.wallpaper_cmd, path))
+
+
+class RedditWallpaperSetterOSX(RedditWallpaperSetter):
+    def _set_wallpaper(self, path):
+        script = NSAppleScript.alloc().initWithSource_("""
+            tell app "Finder" to set desktop picture to POSIX file "%s"
+        """ % path)
+        script.executeAndReturnError_(None)
+
+
 if __name__ == "__main__":
-    wallpaper_setter = RedditWallpaperSetter(DEFAULT_SUBREDDIT, WALLPAPER_CACHE_DIR,
-                                            WALLPAPER_CMD, FRAME_SPEED)
+    if sys.platform == "darwin":
+        # Set the activation policy to NSApplicationActivationPolicyAccessory
+        # so we don't show the Python dock icon when using PyObjC.
+        NSApplication.sharedApplication().setActivationPolicy_(2)
+        wallpaper_setter = RedditWallpaperSetterOSX(DEFAULT_SUBREDDIT,
+                                                    WALLPAPER_CACHE_DIR,
+                                                    FRAME_SPEED)
+    else:
+        wallpaper_setter = RedditWallpaperSetterLinux(DEFAULT_SUBREDDIT,
+                                                      WALLPAPER_CACHE_DIR,
+                                                      WALLPAPER_CMD,
+                                                      FRAME_SPEED)
     wallpaper_setter.run()
