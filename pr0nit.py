@@ -7,6 +7,7 @@ Suggested subreddits: /r/earthporn, /r/usaporn, /r/cityporn. Works on any
 subreddit with links directly to jpg files.
 
 Author: Tom Dignan <tom@tomdignan.com>
+Contributors: James Clarke 
 """
 
 import argparse
