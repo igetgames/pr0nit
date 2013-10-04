@@ -9,6 +9,7 @@ subreddit with links directly to jpg files.
 Author: Tom Dignan <tom@tomdignan.com>
 """
 
+import argparse
 import uuid
 import os
 import json
@@ -20,15 +21,18 @@ if sys.platform == 'darwin':
     from Foundation import NSAppleScript
     from Cocoa import NSApplication
 
+
 WALLPAPER_CACHE_DIR = "%s/.wallpaper" % os.getenv("HOME")
 DEFAULT_SUBREDDIT = "r/earthporn" # try also, r/usaporn
-WALLPAPER_CMD = "feh --bg-scale"
+DEFAULT_WALLPAPER_CMD = "feh --bg-scale"
+
 FRAME_SPEED = 60
 
 
 class RedditWallpaperSetter(object):
 
-    def __init__(self, subreddit, cache_dir, frame_speed):
+    def __init__(self, subreddit, cache_dir, frame_speed, monitors=1,
+                 **kwargs):
         """ 
         Called every time the program is started. Ensures that the directory
         structure is intact. 
@@ -36,6 +40,7 @@ class RedditWallpaperSetter(object):
         self.subreddit = subreddit
         self.cache_dir = cache_dir
         self.frame_speed = frame_speed
+        self.monitors = monitors
 
         if not os.path.isdir(cache_dir):
             os.mkdir(cache_dir) 
@@ -99,17 +104,28 @@ class RedditWallpaperSetter(object):
 
 
 class RedditWallpaperSetterLinux(RedditWallpaperSetter):
-    def __init__(self, subreddit, cache_dir, wallpaper_cmd, frame_speed):
-        super(RedditWallpaperSetterLinux, self).__init__(subreddit,
-                                                         cache_dir,
-                                                         frame_speed)
+
+    def __init__(self, subreddit, cache_dir, wallpaper_cmd, frame_speed,
+                **kwargs):
+        super(RedditWallpaperSetterLinux, self).__init__(subreddit, cache_dir,
+                                                         frame_speed, **kwargs)
         self.wallpaper_cmd = wallpaper_cmd
+
 
     def _set_wallpaper(self, path):
         os.system("%s %s" % (self.wallpaper_cmd, path))
 
 
+class RedditWallpaperSetterXFCE4(RedditWallpaperSetter):
+    
+    def _set_wallpaper(self, path):
+        for i in range(self.monitors):
+            os.system("xfconf-query -c xfce4-desktop -p "  
+               " /backdrop/screen0/monitor%d/image-path -s %s" % (i, path))
+                
+
 class RedditWallpaperSetterOSX(RedditWallpaperSetter):
+    
     def _set_wallpaper(self, path):
         script = NSAppleScript.alloc().initWithSource_("""
             tell app "Finder" to set desktop picture to POSIX file "%s"
@@ -118,16 +134,38 @@ class RedditWallpaperSetterOSX(RedditWallpaperSetter):
 
 
 if __name__ == "__main__":
-    if sys.platform == "darwin":
+    
+    parser = argparse.ArgumentParser(description="""Set the wallpaper from
+ reddit""")
+
+    parser.add_argument("--monitors", metavar="<number>", type=int, nargs=1,
+        default=1, help="number of monitors in your setup (XFCE4 only)")
+
+    parser.add_argument("--platform", metavar="<string>", type=str, nargs=1,
+        default=sys.platform, help="target platform, defaults to %r" %
+        sys.platform)
+
+    args = parser.parse_args()
+    monitors = args.monitors[0]
+    platform = args.platform[0]
+
+    if platform == "darwin":
         # Set the activation policy to NSApplicationActivationPolicyAccessory
         # so we don't show the Python dock icon when using PyObjC.
         NSApplication.sharedApplication().setActivationPolicy_(2)
         wallpaper_setter = RedditWallpaperSetterOSX(DEFAULT_SUBREDDIT,
                                                     WALLPAPER_CACHE_DIR,
-                                                    FRAME_SPEED)
+                                                    FRAME_SPEED,
+                                                    monitors=monitors)
+    elif platform == "xfce4":
+        wallpaper_setter = RedditWallpaperSetterXFCE4(DEFAULT_SUBREDDIT,
+                                                      WALLPAPER_CACHE_DIR,
+                                                      FRAME_SPEED,
+                                                      monitors=monitors)
     else:
         wallpaper_setter = RedditWallpaperSetterLinux(DEFAULT_SUBREDDIT,
                                                       WALLPAPER_CACHE_DIR,
-                                                      WALLPAPER_CMD,
-                                                      FRAME_SPEED)
+                                                      DEFAULT_WALLPAPER_CMD,
+                                                      FRAME_SPEED, 
+                                                      monitors=monitors)
     wallpaper_setter.run()
