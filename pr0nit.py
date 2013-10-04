@@ -106,15 +106,8 @@ class RedditWallpaperSetter(object):
 
 class RedditWallpaperSetterLinux(RedditWallpaperSetter):
 
-    def __init__(self, subreddit, cache_dir, wallpaper_cmd, frame_speed,
-                **kwargs):
-        super(RedditWallpaperSetterLinux, self).__init__(subreddit, cache_dir,
-                                                         frame_speed, **kwargs)
-        self.wallpaper_cmd = wallpaper_cmd
-
-
     def _set_wallpaper(self, path):
-        os.system("%s %s" % (self.wallpaper_cmd, path))
+        os.system("%s %s" % (DEFAULT_WALLPAPER_CMD, path))
 
 
 class RedditWallpaperSetterXFCE4(RedditWallpaperSetter):
