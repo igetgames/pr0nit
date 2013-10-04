@@ -29,4 +29,8 @@ Wishlist:
       * kde
       * gnome3
       * unity
+  * Implement md5 based storage instead of using UUIDs. Where the code
+    currently saves the images using a UUID, instead take the md5 hash
+    of the URL. This can be used to get a near perfect idea of whether
+    we've already downloaded the image and save some bandwidth/storage.
 
