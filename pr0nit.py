@@ -132,16 +132,24 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""Set the wallpaper from
  reddit""")
 
-    parser.add_argument("--monitors", metavar="<number>", type=int, nargs=1,
-        default=1, help="number of monitors in your setup (XFCE4 only)")
 
+    parser.add_argument("--monitors", metavar="<number>", type=int, nargs=1,
+        default=1, help="Number of monitors in your setup (XFCE4 only)")
+
+    parser.add_argument("--frame-speed", metavar="<seconds>", type=int,
+        nargs=1, help="Number of seconds to elapse between switching wallpapers.")
+        
     parser.add_argument("--platform", metavar="<string>", type=str, nargs=1,
-        default=sys.platform, help="target platform, defaults to %r" %
+        default=sys.platform, help="Target platform, defaults to %r." %
         sys.platform)
 
     args = parser.parse_args()
-    monitors = args.monitors[0]
-    platform = args.platform[0]
+    
+    get_arg = lambda x : x[0] if not x is None and not isinstance(x, int) else x
+    monitors = get_arg(args.monitors)
+    platform = get_arg(args.platform)
+    frame_speed = get_arg(args.frame_speed)
+
 
     if platform == "darwin":
         # Set the activation policy to NSApplicationActivationPolicyAccessory
@@ -159,7 +167,6 @@ if __name__ == "__main__":
     else:
         wallpaper_setter = RedditWallpaperSetterLinux(DEFAULT_SUBREDDIT,
                                                       WALLPAPER_CACHE_DIR,
-                                                      DEFAULT_WALLPAPER_CMD,
                                                       FRAME_SPEED, 
                                                       monitors=monitors)
     wallpaper_setter.run()
