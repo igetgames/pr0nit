@@ -26,8 +26,7 @@ if sys.platform == 'darwin':
 WALLPAPER_CACHE_DIR = "%s/.wallpaper" % os.getenv("HOME")
 DEFAULT_SUBREDDIT = "r/earthporn" # try also, r/usaporn
 DEFAULT_WALLPAPER_CMD = "feh --bg-scale"
-
-FRAME_SPEED = 60
+DEFAULT_FRAME_SPEED = 60
 
 
 class RedditWallpaperSetter(object):
@@ -137,7 +136,8 @@ if __name__ == "__main__":
         default=1, help="Number of monitors in your setup (XFCE4 only)")
 
     parser.add_argument("--frame-speed", metavar="<seconds>", type=int,
-        nargs=1, help="Number of seconds to elapse between switching wallpapers.")
+        default=DEFAULT_FRAME_SPEED, nargs=1, 
+        help="Number of seconds to elapse between switching wallpapers.")
         
     parser.add_argument("--platform", metavar="<string>", type=str, nargs=1,
         default=sys.platform, help="Target platform, defaults to %r." %
@@ -157,16 +157,16 @@ if __name__ == "__main__":
         NSApplication.sharedApplication().setActivationPolicy_(2)
         wallpaper_setter = RedditWallpaperSetterOSX(DEFAULT_SUBREDDIT,
                                                     WALLPAPER_CACHE_DIR,
-                                                    FRAME_SPEED,
+                                                    frame_speed,
                                                     monitors=monitors)
     elif platform == "xfce4":
         wallpaper_setter = RedditWallpaperSetterXFCE4(DEFAULT_SUBREDDIT,
                                                       WALLPAPER_CACHE_DIR,
-                                                      FRAME_SPEED,
+                                                      frame_speed,
                                                       monitors=monitors)
     else:
         wallpaper_setter = RedditWallpaperSetterLinux(DEFAULT_SUBREDDIT,
                                                       WALLPAPER_CACHE_DIR,
-                                                      FRAME_SPEED, 
+                                                      frame_speed,
                                                       monitors=monitors)
     wallpaper_setter.run()
