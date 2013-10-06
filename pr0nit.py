@@ -19,8 +19,7 @@ import urllib2
 import time
 import sys
 
-
-if sys.platform == 'darwin':
+if sys.platform == 'darwin': 
     from Foundation import NSAppleScript
     from Cocoa import NSApplication
 
@@ -48,8 +47,8 @@ class RedditWallpaperSetter(object):
         if not os.path.isdir(cache_dir):
             os.mkdir(cache_dir) 
 
-    
-    def slideshow(self):
+
+    def update_wallpaper(self):
         """
         Downloads latest wallpapers and displays one at a time, sleeping
         at the specified frame speed.
@@ -64,7 +63,11 @@ class RedditWallpaperSetter(object):
 
         for url in wallpaper_urls:
             path = self._cache_wallpaper(url)            
-            self._set_wallpaper(path)
+
+
+    def slideshow(self):
+        for filename in os.listdir(self.cache_dir):
+            self._set_wallpaper(os.path.join(self.cache_dir, filename))
             time.sleep(self.frame_speed)
 
 
@@ -187,3 +190,5 @@ if __name__ == "__main__":
     # runs here until cancelled.
     while True:
         wallpaper_setter.slideshow()
+        wallpaper_setter.update_wallpaper()
+
