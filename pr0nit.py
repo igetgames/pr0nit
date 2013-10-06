@@ -10,8 +10,8 @@ Author: Tom Dignan <tom@tomdignan.com>
 Contributors: James Clarke 
 """
 
-import md5
-import argparse
+import md5 
+import argparse 
 import uuid
 import os
 import json
@@ -39,13 +39,18 @@ class RedditWallpaperSetter(object):
         Called every time the program is started. Ensures that the directory
         structure is intact. 
         """
-        self.subreddit = subreddit
-        self.cache_dir = cache_dir
+   
+        self._create_directory_if_not_exists(cache_dir)
+        self.cache_dir = os.path.join(cache_dir, subreddit)
+        self._create_directory_if_not_exists(self.cache_dir)
+        self.subreddit = "r/" + subreddit
         self.frame_speed = frame_speed
         self.monitors = monitors
 
-        if not os.path.isdir(cache_dir):
-            os.mkdir(cache_dir) 
+
+    def _create_directory_if_not_exists(self, path):
+        if not os.path.isdir(path):
+            os.mkdir(path) 
 
 
     def update_wallpaper(self):
@@ -56,7 +61,7 @@ class RedditWallpaperSetter(object):
         try:
             wallpaper_urls = self._get_wallpaper_urls()
         except urllib2.HTTPError as e:
-            print "Retrying in 10 seconds: %r" % e
+            print "Retrying in 10 seconds: %r %d" % (e, e.code)
             time.sleep(10)
             self.run()
             return
@@ -157,7 +162,11 @@ if __name__ == "__main__":
     parser.add_argument("--frame-speed", metavar="<seconds>", type=int,
         default=DEFAULT_FRAME_SPEED, nargs=1, 
         help="Number of seconds to elapse between switching wallpapers.")
-        
+    
+    parser.add_argument("--wallpaper-dir", metavar="<path>", type=str, nargs=1,
+        default=WALLPAPER_CACHE_DIR, help="Directory to read/write wallpaper to"
+        " and from")
+
     parser.add_argument("--platform", metavar="<string>", type=str, nargs=1,
         default=sys.platform, help="Target platform, defaults to %r." %
         sys.platform)
@@ -171,20 +180,21 @@ if __name__ == "__main__":
     monitors = get_arg(args.monitors)
     platform = get_arg(args.platform)
     frame_speed = get_arg(args.frame_speed)
-    subreddit = "r/" + get_arg(args.subreddit)
+    subreddit =  get_arg(args.subreddit)
+    wallpaper_dir = get_arg(args.wallpaper_dir)
 
 
     if platform == "darwin":
         # Set the activation policy to NSApplicationActivationPolicyAccessory
         # so we don't show the Python dock icon when using PyObjC.
         NSApplication.sharedApplication().setActivationPolicy_(2)
-        wallpaper_setter = RedditWallpaperSetterOSX(subreddit, WALLPAPER_CACHE_DIR,
+        wallpaper_setter = RedditWallpaperSetterOSX(subreddit, wallpaper_dir,
                                                     frame_speed, monitors=monitors)
     elif platform == "xfce4":
-        wallpaper_setter = RedditWallpaperSetterXFCE4(subreddit, WALLPAPER_CACHE_DIR,
+        wallpaper_setter = RedditWallpaperSetterXFCE4(subreddit, wallpaper_dir,
                                                       frame_speed, monitors=monitors)
     else:
-        wallpaper_setter = RedditWallpaperSetterLinux(subreddit, WALLPAPER_CACHE_DIR,
+        wallpaper_setter = RedditWallpaperSetterLinux(subreddit, wallpaper_dir,
                                                       frame_speed, monitors=monitors)
 
     # runs here until cancelled.
