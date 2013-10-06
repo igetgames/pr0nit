@@ -29,7 +29,7 @@ DEBUG = False
 WALLPAPER_CACHE_DIR = "%s/.wallpaper" % os.getenv("HOME")
 DEFAULT_SUBREDDIT = "earthporn" # try also, r/usaporn
 DEFAULT_WALLPAPER_CMD = "feh --bg-scale"
-DEFAULT_FRAME_SPEED = 60
+DEFAULT_FRAME_SPEED = 300
 
 
 class RedditWallpaperSetter(object):
@@ -48,10 +48,11 @@ class RedditWallpaperSetter(object):
         if not os.path.isdir(cache_dir):
             os.mkdir(cache_dir) 
 
-
-    def run(self):
+    
+    def slideshow(self):
         """
-        Runs here until terminated. Sets wallpapers at time intervals.
+        Downloads latest wallpapers and displays one at a time, sleeping
+        at the specified frame speed.
         """
         try:
             wallpaper_urls = self._get_wallpaper_urls()
@@ -182,4 +183,7 @@ if __name__ == "__main__":
     else:
         wallpaper_setter = RedditWallpaperSetterLinux(subreddit, WALLPAPER_CACHE_DIR,
                                                       frame_speed, monitors=monitors)
-    wallpaper_setter.run()
+
+    # runs here until cancelled.
+    while True:
+        wallpaper_setter.slideshow()
