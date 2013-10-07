@@ -424,6 +424,14 @@ if __name__ == "__main__":
     print "Done!"
 
     if use_web_interface:
+        # Use a separate process to kick off the web browser so that it can be
+        # delayed.
+        pid2 = os.fork()
+        if pid2 == 0:
+            time.sleep(1)
+            webbrowser.open("http://localhost:%d" % WEB_INTERFACE_PORT)
+            sys.exit(0)
+    
         print "Launching web interface...."
         pid = os.fork()
         if pid == 0:
@@ -439,6 +447,7 @@ if __name__ == "__main__":
             server.serve_forever()
             # kill the child so it doesn't run away.
             os.kill(pid)
+            os.kill(pid2)
 
         sys.exit(0)
     else:
