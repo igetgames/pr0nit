@@ -334,7 +334,7 @@ class RedditWallpaperSetter(object):
         # only create the file if it does not already exist in the cache.
 
         if not os.path.isfile(path): 
-            file_out = open(path, "w")
+            file_out = open(path, "wb")
             file_out.write(file_in.read())
             file_out.close()
             file_in.close()
@@ -351,7 +351,11 @@ class RedditWallpaperSetter(object):
 class RedditWallpaperSetterLinux(RedditWallpaperSetter):
 
     def set_wallpaper(self, path):
-        os.system("%s %s" % (DEFAULT_WALLPAPER_CMD, path))
+        if os.environ.get('DESKTOP_SESSION') == "cinnamon":
+            os.system("gsettings set org.gnome.desktop.background picture-options scaled") #Change to preference
+            os.system("gsettings set org.gnome.desktop.background picture-uri 'file://%s'" % path)
+        else:
+            os.system("%s %s" % (DEFAULT_WALLPAPER_CMD, path))
 
 
 class RedditWallpaperSetterXFCE4(RedditWallpaperSetter):
