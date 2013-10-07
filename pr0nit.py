@@ -82,7 +82,7 @@ class WebInterface(BaseHTTPRequestHandler):
 <div class="row-fluid">
     <div class="span2"></div>
     <div class="span3">
-        <a class="btn">Preview</a>
+        <a class="btn preview">Preview</a>
     </div>
     <div class="span2"></div>
     <div class="span3">
@@ -174,6 +174,9 @@ $(document).ready(function() {
         $(this).addClass("active");
     });
 
+    $(".preview").click(function() {
+        $(this).closest(".row-fluid").siblings().find(".fancybox_preview").click();
+    });
     $(".fancybox_preview").fancybox();
 })
     </script>
