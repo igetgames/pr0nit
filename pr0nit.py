@@ -37,6 +37,11 @@ if sys.platform == 'darwin':
     from Foundation import NSAppleScript
     from Cocoa import NSApplication
 
+if sys.platform == 'win32':
+    from ctypes import windll
+    SPI_SETDESKWALLPAPER = 0x14
+    SPIF_UPDATEINIFILE = 0x1
+    SPIF_SENDWININICHANGE = 0x2
 
 DEBUG = False
 WALLPAPER_CACHE_DIR = "%s/.wallpaper" % os.getenv("HOME")
@@ -375,6 +380,13 @@ class RedditWallpaperSetterOSX(RedditWallpaperSetter):
         script.executeAndReturnError_(None)
 
 
+class RedditWallpaperSetterWindows(RedditWallpaperSetter):
+
+    def set_wallpaper(self, path):
+        windll.user32.SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, path,
+                                            SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
+
+
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="""Set the wallpaper from
@@ -422,6 +434,9 @@ if __name__ == "__main__":
     elif platform == "xfce4":
         wallpaper_setter = RedditWallpaperSetterXFCE4(subreddit, wallpaper_dir,
                                                       frame_speed, monitors=monitors)
+    elif platform == "win32":
+        wallpaper_setter = RedditWallpaperSetterWindows(subreddit, wallpaper_dir,
+                                                        frame_speed, monitors=monitors)
     else:
         wallpaper_setter = RedditWallpaperSetterLinux(subreddit, wallpaper_dir,
                                                       frame_speed, monitors=monitors)
